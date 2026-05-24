@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"reproducir_animacion",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"reproducir_animacion",
+  "parent":{
+    "name":"SCRIPTS",
+    "path":"folders/SCRIPTS.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

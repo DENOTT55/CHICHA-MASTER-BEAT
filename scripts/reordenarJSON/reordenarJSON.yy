@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"reordenarJSON",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"reordenarJSON",
+  "parent":{
+    "name":"SCRIPTS",
+    "path":"folders/SCRIPTS.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}

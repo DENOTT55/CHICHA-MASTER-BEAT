@@ -1,0 +1,13 @@
+{
+  "$GMScript":"v1",
+  "%Name":"INT_VARS",
+  "isCompatibility":false,
+  "isDnD":false,
+  "name":"INT_VARS",
+  "parent":{
+    "name":"SCRIPTS",
+    "path":"folders/SCRIPTS.yy",
+  },
+  "resourceType":"GMScript",
+  "resourceVersion":"2.0",
+}
