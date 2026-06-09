@@ -17,8 +17,8 @@
   ],
   "name":"rmInt",
   "parent":{
-    "name":"CHICHA_MASTER_BEAT",
-    "path":"CHICHA_MASTER_BEAT.yyp",
+    "name":"ROOMS",
+    "path":"folders/ROOMS.yy",
   },
   "parentRoom":null,
   "physicsSettings":{

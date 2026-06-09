@@ -21,6 +21,8 @@ with (oGameplay) {
 	other.dir = texto_precision
 }
 
+depth = -999999
+
 
 /*
 show_debug_message("-----------------------------------");

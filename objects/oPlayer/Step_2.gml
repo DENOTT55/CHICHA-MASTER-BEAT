@@ -16,6 +16,7 @@ switch (state) {
             if (idle_mode == "N") {
                 sprite_index = anim_config.idle.spr;
                 image_index = 0; 
+				image_xscale = 1
             } else if (idle_mode == "ALT") {
                // --- CORRECCIÓN AQUÍ: Leer desde anim_config ---
                 if (_beat_actual_entero % 2 == 0) {
@@ -24,6 +25,7 @@ switch (state) {
                     sprite_index = anim_config.idle_r.spr;
                 }
                 image_index = 0; 
+				image_xscale = 1
             }
             last_beat = _beat_actual_entero;
         }

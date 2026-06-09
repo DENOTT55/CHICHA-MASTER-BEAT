@@ -1,6 +1,8 @@
 // Botón de Volver
 btn_back = [10, 10, 110, 50];
 
+depth = -999999
+
 // --- DATOS DEL NIVEL ---
 notes_array = [];
 events_array = [];     
@@ -11,6 +13,13 @@ song_name = global.current_chart;
 playersMax = 1;
 
 noteTypeActual = 0
+noteTypeActualType = 0
+
+// SISTEMA MÓVIL DINÁMICO
+global.sistema_movil_avanzado = true; // true para activarlo, false para el sistema clásico
+global.modo_input = "FULL";           // "FULL" (pantalla completa) o "SPLIT" (dividida)
+global.alerta_cambio_input = false;   // Úsala en tu evento Draw GUI para dibujar el aviso
+global.tiempo_sin_fila2 = 0;          // Temporizador para volver a modo FULL tras 40s
 
 // --- SISTEMA DE PUNTOS Y COMBOS ---
 puntos = 0;
@@ -21,8 +30,11 @@ texto_precision = "";
 color_precision = c_white;
 precision_alpha = 0; 
 
+_W = display_get_gui_width();
+_H = display_get_gui_height();
+
 // --- UI ---
-btn_back = [512, 10, 640, 60];
+btn_back = [_W - 120, 10, _W-10, 60];
 
 // --- NUEVO: CONFIGURACIÓN INDEPENDIENTE POR FILA/CARRIL ---
 // [Fila 0, Fila 1, Fila 2] -> Modifica estos valores a tu gusto en X
@@ -43,27 +55,44 @@ col_is_pressed = [false, false, false];
 touch_start_y = [-1, -1, -1, -1, -1];
 audio_instance = 0;
 
+song_name = global.song_to_load;
+
 // --- CARGA DEL JSON ---
 var _path = working_directory + song_name + ".json";
 if (file_exists(_path)) {
     var _file = file_text_open_read(_path);
     var _json = "";
-    while (!file_text_eof(_file)) _json += file_text_read_string(_file); file_text_readln(_file);
+    
+    // Agregué llaves {} al while por seguridad estructural
+    while (!file_text_eof(_file)) {
+        _json += file_text_read_string(_file); 
+        file_text_readln(_file);
+    }
     file_text_close(_file);
     
     var _data = json_parse(_json);
-    notes_array = _data.notes;
-    events_array = _data.evento;
-    note_speed = _data.note_speed;
-	playersMax = _data.playersMax;
-	global.players_data.player1 = _data.player1
-	global.players_data.player2 = _data.player2
-	global.players_data.player3 = _data.player3
-	global.players_data.player4 = _data.player4
-	global.players_data.player5 = _data.player5
-	global.players_data.player6 = _data.player6
     
-    scr_sort_events()
+    // Carga segura de variables principales usando [$ "llave"] y un valor por defecto (??)
+    notes_array  = _data[$ "notes"] ?? [];
+    events_array = _data[$ "evento"] ?? [];
+    note_speed   = _data[$ "note_speed"] ?? 100; // Ajusta el 100 a tu valor base por defecto
+    playersMax   = _data[$ "playersMax"] ?? 1;
+    
+    // Carga dinámica del NUEVO sistema de personajes (Máximo 6)
+    for (var i = 0; i < 6; i++) {
+        var _llave = "player" + string(i + 1); // Genera "player1", "player2", etc.
+        
+        // Intentamos leer el personaje del JSON. Si no existe (chart viejo), le ponemos "?" o "chichero"
+        var _personaje_cargado = _data[$ _llave] ?? "?";
+        
+        // 1. Lo actualizamos en tu struct global original
+        global.players_data[$ _llave] = _personaje_cargado;
+        
+        // 2. Lo metemos en el array local (player[]) que usa tu nuevo menú dinámico
+        player[i] = _personaje_cargado;
+    }
+    
+    scr_sort_events();
     
     // Iniciar Música
     var _ogg_path = working_directory + song_name + ".ogg";
@@ -72,6 +101,10 @@ if (file_exists(_path)) {
         audio_instance = audio_play_sound(snd_stream, 1, false);
     }
 }
+
+global.current_chart = global.chart_data.song_name
+
+note_speed = note_speed*100
 
 if playersMax > 3 {playersMax = 3}
 
@@ -97,15 +130,17 @@ playersInGame = {
 	p6: global.P6ID,
 }
 
-
-
 // --- VARIABLES RESTANTES ---
 row_height = 100; 
 row_y = [
-    (room_height / 2) + 150,
-    (room_height / 2) + 150,
-    (room_height / 2) + 150,
+    (room_height / 2) + 140,
+    (room_height / 2) + 140,
+    (room_height / 2) + 140,
 ];
+
+EOlist = {}
+
+instance_create_layer(1216,864+200,"Instances",oChichamovil_EO);
 
 touch_start_y = [-1, -1, -1, -1, -1];
 
@@ -122,3 +157,5 @@ cam_lerp_speed = 0.1;
 cam_zoom_speed = 0.05;
 event_index_cam = 0; 
 cam_shake = 0;
+
+is_playing = true

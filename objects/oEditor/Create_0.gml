@@ -1,6 +1,7 @@
-global.current_chart = "test";
 
-INT_VARS()
+global.current_chart = global.chart_data.song_name
+
+global.CHARTING_MODE = true
 
 playersInGame = {
 	player1: global.P1ID, 
@@ -14,23 +15,12 @@ playersInGame = {
 TXT = "";
 alpha = 0;
 snap_div = 2
-// Datos del Nivel
-global.chart_data = {
-    song_name: "test",
-    bpm: 120,
-    skin_name: "vaso",
-    note_speed: 2,
-    snap_div: 2,
-	playersMax: 1,
-};
+
 
 player = ["chichero","chichero",0,0,0,0,0,0,0,0];
 player1= "chichero";player2= "";player3= "";player4= "";player5= "";player6= "";
 
-global.players_data = {
-    player1: "chichero",
-	player2: "",player3: "",player4: "",player5: "",player6: "",
-};
+
 
 // --- INICIALIZACIÓN DE ARREGLOS ---
 notes_array = [];
@@ -43,6 +33,58 @@ snd_stream = -1;
 audio_instance = -1;
 current_time_sec = 0;
 active_input = "";
+
+// ... (Mantén tu código anterior hasta active_input = "") ...
+
+// --- NUEVAS VARIABLES PARA SYNC INDICATOR ---
+sync_flash = 0;
+prev_time_sec = 0;
+
+// --- NUEVO SISTEMA DE MENÚ METADATOS ESCALABLE ---
+current_meta_tab = 0; 
+active_input_type = ""; // Para saber si editamos texto o número
+active_input_min = 0;
+active_input_max = 0;
+
+// Estructura del menú: ¡Añade o quita secciones fácilmente aquí!
+meta_menu_layout = [
+    {
+        tab_name: "Canción",
+        elements: [
+            { key: "song_name", label: "Nombre de Audio", type: "text" },
+            { key: "bpm", label: "Velocidad BPM", type: "number", min_val: 10, max_val: 500 },
+            { key: "skin_name", label: "Skin Global", type: "text" }
+        ]
+    },
+    {
+        tab_name: "Gameplay",
+        elements: [
+            { key: "note_speed", label: "Vel. Notas (x100)", type: "number", min_val: 1, max_val: 200 },
+            { key: "snap_div", label: "Div. Grilla", type: "number", min_val: 1, max_val: 16 },
+        ]
+    },
+	{
+        // --- NUEVA SOLAPA DE PERSONAJES ---
+        tab_name: "Personajes",
+        elements: [
+			{ key: "playersMax", label: "Max Jugadores", type: "number", min_val: 1, max_val: 6 },
+            { type: "players_list" } // Este tipo especial avisará al Draw que debe dibujar los iconos
+        ]
+    },
+    {
+        tab_name: "Opciones",
+        elements: [
+            // Ejemplo de Checkbox. Asegúrate de que global.CHARTING_MODE esté en global.chart_data si vas a usarlo así.
+            { key: "is_modding", label: "Modo Modding", type: "bool" } 
+        ]
+    }
+];
+
+// Nos aseguramos que los booleanos existan en el chart_data para evitar crash
+if (!variable_struct_exists(global.chart_data, "is_modding")) global.chart_data.is_modding = false;
+
+// ... (Sigue con el resto de tu Create original, como loadSong etc.) ...
+
 editing_player_name = -1
 charPlaceID = 0
 
@@ -87,7 +129,7 @@ if (loadSong == false) {
         if (variable_struct_exists(_loaded, "bpm"))         global.chart_data.bpm = _loaded.bpm;
         if (variable_struct_exists(_loaded, "player_name")) global.chart_data.player_name = _loaded.player_name;
         if (variable_struct_exists(_loaded, "skin_name"))   global.chart_data.skin_name = _loaded.skin_name;
-        if (variable_struct_exists(_loaded, "note_speed"))  global.chart_data.note_speed = _loaded.note_speed / 100;
+        if (variable_struct_exists(_loaded, "note_speed"))  global.chart_data.note_speed = _loaded.note_speed;
         if (variable_struct_exists(_loaded, "snap_div"))    global.chart_data.snap_div = _loaded.snap_div;
         if (variable_struct_exists(_loaded, "playersMax"))  global.chart_data.playersMax = _loaded.playersMax;
         

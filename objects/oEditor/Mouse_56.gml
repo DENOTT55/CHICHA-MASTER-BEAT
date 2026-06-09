@@ -2,72 +2,42 @@ var mx = mouse_x;
 var my = mouse_y;
 
 if (show_meta_menu) {
-    // Lógica del menú de Metadatos
-    // 1. Clic en las cajas de texto
-    var _mx1 = room_width * 0.1;
-    var _mx2 = room_width * 0.9;
-    var _my1 = room_height * 0.1;
-    
-    var _iy = _my1 + 60;
-    var _keys = variable_struct_get_names(global.chart_data);
-    var _clicked_box = false;
-    
-    for(var i=0; i<array_length(_keys); i++) {
-        var _k = _keys[i];
-        if (mx > _mx1 + 20 && mx < _mx2 - 300 && my > _iy && my < _iy + 35) {
-            active_input = _k;
-            keyboard_string = string(global.chart_data[$ _k]);
-            if (os_type == os_android) keyboard_virtual_show(kbv_type_default, kbv_returnkey_done, kbv_autocapitalize_none, false);
-            _clicked_box = true;
-            break;
+    // Si haces clic fuera de cualquier caja y estás escribiendo
+    if (mouse_check_button_pressed(mb_left) && active_input != "") {
+        // Un chequeo de seguridad simple para cancelar input
+        if (mx < room_width * 0.1 || mx > room_width * 0.9) { 
+            active_input = ""; 
+            if (os_type == os_android) keyboard_virtual_hide(); 
         }
-        _iy += 45;
     }
-    
-    if (!_clicked_box) { active_input = ""; if (os_type == os_android) keyboard_virtual_hide(); }
     
     // Botón Guardar
     if (mx > btn_save[0] && mx < btn_save[2] && my > btn_save[1] && my < btn_save[3]) {
-        var _save_data = {};
-        _save_data.song_name = global.chart_data.song_name;
-        _save_data.bpm = global.chart_data.bpm;
-        _save_data.player_name = global.chart_data.player_name;
-        _save_data.skin_name = global.chart_data.skin_name;
-		_save_data.snap_div = global.chart_data.snap_div;
-		_save_data.playersMax = global.chart_data.playersMax
-        _save_data.note_speed = global.chart_data.note_speed*100;
-        _save_data.notes = notes_array;
-        _save_data.evento = events_array;
-		
-		_save_data.player1 = player[0]
-		_save_data.player2 = player[1]
-		_save_data.player3 = player[2]
-		_save_data.player4 = player[3]
-		_save_data.player5 = player[4]
-		_save_data.player6 = player[5]
-        
-        var _file = file_text_open_write(working_directory + global.chart_data.song_name + ".json");
-        file_text_write_string(_file, json_stringify(_save_data));
-        file_text_close(_file);
-        
+        guardar_chart(global.chart_data.song_name, notes_array, events_array, player);
         scr_sort_events();
         TXT = "Guardado con exito."; alpha = 1;
     }
     
     // Botón Cargar
     if (mx > btn_load[0] && mx < btn_load[2] && my > btn_load[1] && my < btn_load[3]) {
-        var _path = working_directory + global.chart_data.song_name + ".json";
-        if (file_exists(_path)) {
-            var _file = file_text_open_read(_path);
-            var _json = "";
-            while (!file_text_eof(_file)) _json += file_text_read_string(_file);
-            file_text_close(_file);
+        var _loaded_data = cargar_chart(global.chart_data.song_name);
+        
+        if (_loaded_data != undefined) {
+            notes_array = variable_struct_exists(_loaded_data, "notes") ? _loaded_data.notes : [];
+            events_array = variable_struct_exists(_loaded_data, "evento") ? _loaded_data.evento : [];
             
-            var _loaded = json_parse(_json);
-            notes_array = _loaded.notes;
-            events_array = variable_struct_exists(_loaded, "evento") ? _loaded.evento : [];
+            // Cargar jugadores
+            for(var p = 0; p < global.chart_data.playersMax; p++) {
+                var pk = "player" + string(p+1);
+                if (variable_struct_exists(_loaded_data, pk)) {
+                    player[p] = _loaded_data[$ pk];
+                }
+            }
+            
             selected_note = -1; selected_event = -1;
             TXT = "Cargado con exito."; alpha = 1;
+        } else {
+            TXT = "Error: Archivo no existe."; alpha = 1;
         }
     }
     

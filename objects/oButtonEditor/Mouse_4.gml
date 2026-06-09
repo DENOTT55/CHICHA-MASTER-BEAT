@@ -26,7 +26,7 @@ switch (a) {
 		image_xscale = scalex*0.9
 		image_yscale = scaley*0.9
 		
-		num = 4;draw = false
+		num = 4-oEditor.is_playing;//draw = false
 		
 		with (oEditor) {
 			if active_input == "" {

@@ -32,7 +32,16 @@ function get_event_metadata(_type) {
 				{ name: "Separacion X", key: "plus", type: "number", step: 10, def: 0 },
                 { name: "Duración", key: "duration", type: "number", step: 0.1, def: 0.2 }
             ]
-        }
+        },
+		{ 
+            name: "MOVER AL EPICENTRO", 
+            spr: sEvShake, 
+            properties: [
+                { name: "Linea", key: "line", type: "number", step: 1, def: 1 },
+				{ name: "Player ID", key: "ID", type: "number", step: 1, def: 0 },
+				{ name: "Animacion?", key: "name", type: "list", options: ["noone","idle","hit","miss","hold","misshold","nice","happy","getout"], def: "noone"},
+            ]
+        },
     ];
     
 	// --- NUEVO: Si pides -1, te da el total de eventos automáticamente ---

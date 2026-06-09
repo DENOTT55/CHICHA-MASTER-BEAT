@@ -1,4 +1,4 @@
-draw_set_halign(fa_left);
+draw_set_halign(fa_left);draw_set_font(global.Fonts.f1m)
 var _w = room_width;
 var _h = room_height;
 
@@ -67,7 +67,13 @@ for (var _y = _start_y; _y < _h; _y += _pixel_interval) {
 }
 draw_set_alpha(1);
 
-draw_line_color(0, hit_y, _w, hit_y, c_red, c_red); // Hit Line
+// DIBUJO DE LA HIT LINE + DESTELLO
+draw_line_color(0, hit_y, _w, hit_y, c_red, c_red);
+if (sync_flash > 0) {
+    draw_set_alpha(sync_flash);
+    draw_line_width_color(0, hit_y, _w, hit_y, 4, c_white, c_white);
+    draw_set_alpha(1);
+}
 
 // 3. DIBUJAR NOTAS E INDICADOR DE SELECCIÓN
 var _noteS = sNoteVisual; 
@@ -125,42 +131,150 @@ for (var e = 0; e < array_length(events_array); e++) {
 
 // 5. SISTEMA DE MENÚS (METADATOS O EDICIÓN)
 if (show_meta_menu) {
-    // --- MENÚ DE METADATOS (VENTANA EMERGENTE) ---
-    draw_set_color(c_black);
-    draw_set_alpha(0.8);
-    draw_rectangle(0, 0, _w, _h, false);
-    draw_set_alpha(1);
+    draw_set_color(c_black); draw_set_alpha(0.8); draw_rectangle(0, 0, _w, _h, false); draw_set_alpha(1);
     
-    var _mx1 = _w * 0.1;
-    var _my1 = _h * 0.1;
-    var _mx2 = _w * 0.9;
-    var _my2 = _h * 0.9;
+    var _mx1 = _w * 0.1, _my1 = _h * 0.15, _mx2 = _w * 0.9, _my2 = _h * 0.9; // _my1 bajó un poco para dar espacio a las solapas
     
+    // --- DIBUJAR SOLAPAS (TABS) ---
+    var _tabs_count = array_length(meta_menu_layout);
+    var _tab_w = (_mx2 - _mx1) / _tabs_count;
+    
+    for (var t = 0; t < _tabs_count; t++) {
+        var _tx1 = _mx1 + (t * _tab_w);
+        var _ty1 = _my1 - 40; // Sobresale 40px hacia arriba
+        
+        // Color activo vs inactivo
+        draw_set_color(current_meta_tab == t ? c_dkgray : c_gray);
+        draw_rectangle(_tx1, _ty1, _tx1 + _tab_w, _my1, false);
+        draw_set_color(c_white);
+        draw_text(_tx1 + 15, _ty1 + 10, meta_menu_layout[t].tab_name);
+        
+        // Detectar Clic en solapa (Directo en draw para agilizar UI)
+        if (mouse_check_button_pressed(mb_left) && mouse_x > _tx1 && mouse_x < _tx1 + _tab_w && mouse_y > _ty1 && mouse_y < _my1) {
+            current_meta_tab = t;
+            active_input = ""; // Resetea si estabas escribiendo
+        }
+    }
+    
+    // --- FONDO DEL MENÚ ---
     draw_set_color(c_dkgray);
     draw_rectangle(_mx1, _my1, _mx2, _my2, false);
-    draw_set_color(c_white);
-    draw_text(_mx1 + 20, _my1 + 20, "METADATOS DEL NIVEL");
-    draw_line(_mx1 + 20, _my1 + 45, _mx2 - 20, _my1 + 45);
     
-    var _iy = _my1 + 60;
-    var _keys = variable_struct_get_names(global.chart_data);
-    for(var i=0; i<array_length(_keys); i++) {
-        var _k = _keys[i];
-        draw_set_color(active_input == _k ? c_ltgray : c_gray);
-        draw_rectangle(_mx1 + 20, _iy, _mx2 - 300, _iy + 35, false);
-        draw_set_color(c_white);
+    // --- CONTENIDO DE LA SOLAPA ACTUAL ---
+    var _iy = _my1 + 20;
+    var _current_elements = meta_menu_layout[current_meta_tab].elements;
+    var _click_pressed = mouse_check_button_pressed(mb_left);
+    
+    for(var i = 0; i < array_length(_current_elements); i++) {
+        var _elem = _current_elements[i];
         
-        var _val_str = string(global.chart_data[$ _k]);
-        if (active_input == _k) _val_str += "|";
-        draw_text(_mx1 + 30, _iy + 8, _k + ": " + _val_str);
-        _iy += 45; 
+        // A. SI EL ELEMENTO ES LA LISTA DE PERSONAJES
+        if (_elem.type == "players_list") {
+            for (var p = 0; p < global.chart_data.playersMax; ++p) {
+                var sContainer = skinFunction(player[p]);
+                var sICON = sContainer.icon.spr;
+                
+                var _icon_x = _mx1 + 80;
+                var _icon_y = _iy + 30; // Centrado en su respectiva fila
+                
+                draw_sprite(sIconBG, 0, _icon_x, _icon_y);
+                draw_sprite_ext(sICON, 0, _icon_x, _icon_y,0.8,0.8,0,c_white,1);
+                
+                var _w_icon = sprite_get_width(sIconBG);
+                var _h_icon = sprite_get_height(sIconBG);
+                var _hover_icon = (mouse_x > _icon_x - _w_icon/2 && mouse_x < _icon_x + _w_icon/2 && mouse_y > _icon_y - _h_icon/2 && mouse_y < _icon_y + _h_icon/2);
+                
+                var _box_x1 = _icon_x + _w_icon/2 + 10;
+                var _box_x2 = _box_x1 + 180;
+                var _box_y1 = _icon_y - 15;
+                var _box_y2 = _icon_y + 15;
+                var _hover_box = (mouse_x > _box_x1 && mouse_x < _box_x2 && mouse_y > _box_y1 && mouse_y < _box_y2);
+                
+                // Activar edición al hacer clic en icono O en la caja
+                if ((_hover_icon || _hover_box) && _click_pressed) {
+                    editing_player_name = p;
+                    active_input = ""; // Desactivar variables normales
+                    keyboard_string = string(player[p]);
+                    if (os_type == os_android) keyboard_virtual_show(kbv_type_default, kbv_returnkey_done, kbv_autocapitalize_none, false);
+                }
+                
+                // Dibujo de la caja
+                if (editing_player_name == p) {
+                    draw_set_color(c_white);
+                    draw_rectangle(_box_x1, _box_y1, _box_x2, _box_y2, false);
+                    draw_set_color(c_black);
+                    draw_text(_box_x1 + 5, _box_y1 + 5, string(player[p]) + "|");
+                    
+                    // Cerrar edición si se da clic afuera
+                    if (_click_pressed && !_hover_icon && !_hover_box) {
+                        editing_player_name = -1;
+                        if (os_type == os_android) keyboard_virtual_hide();
+                    }
+                } else {
+                    draw_set_color(c_gray);
+                    draw_rectangle(_box_x1, _box_y1, _box_x2, _box_y2, false);
+                    draw_set_color(c_white);
+                    draw_text(_box_x1 + 5, _box_y1 + 5, string(player[p]));
+                }
+                
+                _iy += 65; // Aumentar espacio en Y para el siguiente personaje
+            }
+        
+        // B. SI EL ELEMENTO ES BOOL (CHECKBOX)
+        } else if (_elem.type == "bool") {
+            var _k = _elem.key;
+            var _val = global.chart_data[$ _k];
+            
+            draw_set_color(c_gray);
+            draw_rectangle(_mx1 + 20, _iy, _mx2 - 300, _iy + 35, false);
+            draw_set_color(c_white);
+            
+            var _box_x = (_mx2 - 300) - 30; 
+            draw_rectangle(_box_x, _iy + 5, _box_x + 25, _iy + 30, true);
+            if (_val == true) { 
+                draw_rectangle(_box_x + 5, _iy + 10, _box_x + 20, _iy + 25, false);
+            }
+            draw_text(_mx1 + 30, _iy + 8, _elem.label);
+            
+            if (_click_pressed && mouse_x > _mx1 + 20 && mouse_x < _mx2 - 300 && mouse_y > _iy && mouse_y < _iy + 35) {
+                global.chart_data[$ _k] = !_val;
+            }
+            _iy += 45; 
+            
+        // C. SI EL ELEMENTO ES TEXTO O NÚMERO
+        } else {
+            var _k = _elem.key;
+            
+            draw_set_color(active_input == _k ? c_ltgray : c_gray);
+            draw_rectangle(_mx1 + 20, _iy, _mx2 - 300, _iy + 35, false);
+            draw_set_color(c_white);
+            
+            var _val_str = string(global.chart_data[$ _k]);
+            if (active_input == _k) _val_str += "|";
+            draw_text(_mx1 + 30, _iy + 8, _elem.label + ": " + _val_str);
+            
+            if (_click_pressed && mouse_x > _mx1 + 20 && mouse_x < _mx2 - 300 && mouse_y > _iy && mouse_y < _iy + 35) {
+                active_input = _k;
+                active_input_type = _elem.type;
+                editing_player_name = -1; // Asegurar que no estemos editando personajes a la vez
+                
+                if (_elem.type == "number") {
+                    active_input_min = _elem.min_val;
+                    active_input_max = _elem.max_val;
+                }
+                
+                keyboard_string = string(global.chart_data[$ _k]);
+                if (os_type == os_android) keyboard_virtual_show(kbv_type_default, kbv_returnkey_done, kbv_autocapitalize_none, false);
+            }
+            _iy += 45; 
+        }
     }
 	
 	// --- CAMBIO: Variable para detectar clics únicos al abrir/cerrar casillas ---
     var _click_pressed = mouse_check_button_pressed(mb_left);
 
     //icons
-    //icons
+    /*
     for (var i = 0; i < global.chart_data.playersMax; ++i) {
         var sContainer = skinFunction(player[i]);
         var sICON = sContainer.icon.spr;
@@ -210,7 +324,7 @@ if (show_meta_menu) {
             draw_set_color(c_white);
             draw_text(_box_x1 + 5, _box_y1 + 5, string(player[i]));
         }
-    }
+    }*/
     
     var _btn_y = _my2 - 70;
     btn_save = [_mx1 + 20, _btn_y, _mx1 + 140, _btn_y + 50];

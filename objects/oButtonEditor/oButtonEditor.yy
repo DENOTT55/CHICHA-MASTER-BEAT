@@ -12,8 +12,8 @@
   "name":"oButtonEditor",
   "overriddenProperties":[],
   "parent":{
-    "name":"OBJECTS",
-    "path":"folders/OBJECTS.yy",
+    "name":"EDITOR",
+    "path":"folders/OBJECTS/EDITOR.yy",
   },
   "parentObjectId":null,
   "persistent":false,

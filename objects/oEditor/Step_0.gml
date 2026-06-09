@@ -15,17 +15,32 @@ if (_w > _h) {
     hit_y = _h - 150;
 }
 
-// 1. SISTEMA DE ESCRITURA (Anti-Crash y Android)
-if (active_input != "") {
+// 1. SISTEMA DE ESCRITURA (Soporte Móvil unificado)
+if (active_input != "" || editing_player_name != -1) {
+    
     if (keyboard_check_pressed(vk_enter)) {
+        // Al dar Enter, comprobamos si era número y aplicamos límites
+        if (active_input != "" && active_input_type == "number") {
+            var _val = real(global.chart_data[$ active_input]);
+            global.chart_data[$ active_input] = clamp(_val, active_input_min, active_input_max);
+        }
+        
+        // Cerramos cualquier edición activa
         active_input = "";
+        editing_player_name = -1;
         if (os_type == os_android) keyboard_virtual_hide();
+        
     } else {
-        if (is_string(global.chart_data[$ active_input])) {
-            global.chart_data[$ active_input] = keyboard_string;
-        } else {
-            var _solo_numeros = string_digits(keyboard_string);
-            global.chart_data[$ active_input] = (_solo_numeros != "") ? real(_solo_numeros) : 0;
+        // Lógica de escritura mientras no se presione Enter
+        if (active_input != "") {
+            if (active_input_type == "text") {
+                global.chart_data[$ active_input] = keyboard_string;
+            } else if (active_input_type == "number") {
+                var _solo_numeros = string_digits(keyboard_string);
+                global.chart_data[$ active_input] = (_solo_numeros != "") ? real(_solo_numeros) : 0;
+            }
+        } else if (editing_player_name != -1) {
+            player[editing_player_name] = keyboard_string;
         }
     }
 }
@@ -77,3 +92,22 @@ if (selected_event != -1) {
     }
     if (keyboard_check_pressed(vk_escape)) selected_event = -1;
 }
+
+// 4. INDICADOR SONORO Y VISUAL DE SYNC
+if (is_playing) {
+    for (var i = 0; i < array_length(notes_array); i++) {
+        var _n = notes_array[i];
+        // Si la nota pasó la línea en este exacto frame
+        if (_n.time > prev_time_sec && _n.time <= current_time_sec) {
+            sync_flash = 1;
+            // NOTA: Asegúrate de tener un sonido llamado snd_tick (o cámbialo por el tuyo)
+            if (audio_exists(snd_tick)) audio_play_sound(snd_tick, 1, false);
+        }
+    }
+    prev_time_sec = current_time_sec;
+} else {
+    prev_time_sec = current_time_sec; // Mantiene el tiempo rastreado al pausar o scrollear
+}
+
+// Reduce el destello visual progresivamente
+if (sync_flash > 0) sync_flash -= 0.1;
