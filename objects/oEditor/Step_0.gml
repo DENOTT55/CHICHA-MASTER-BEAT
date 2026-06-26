@@ -16,22 +16,47 @@ if (_w > _h) {
 }
 
 // 1. SISTEMA DE ESCRITURA (Soporte Móvil unificado)
-if (active_input != "" || editing_player_name != -1) {
+if (active_input != "" || editing_player_name != -1 || editing_event_prop_key != "") {
     
     if (keyboard_check_pressed(vk_enter)) {
-        // Al dar Enter, comprobamos si era número y aplicamos límites
+        // Al dar Enter, aplicamos los valores según lo que estemos editando
         if (active_input != "" && active_input_type == "number") {
             var _val = real(global.chart_data[$ active_input]);
             global.chart_data[$ active_input] = clamp(_val, active_input_min, active_input_max);
         }
         
+        // --- NUEVO: GUARDAR LA EDICIÓN DEL EVENTO ---
+        if (editing_event_prop_key != "" && selected_event != -1) {
+            var _ev_ref = events_array[selected_event];
+            
+            if (editing_event_prop_type == "number") {
+                try {
+                    // Si la caja está vacía, evitamos crasheos asignando un 0
+                    if (keyboard_string == "") {
+                        _ev_ref[$ editing_event_prop_key] = 0;
+                    } else {
+                        // Convierte la cadena en un número matemático real (soporta decimales y negativos)
+                        _ev_ref[$ editing_event_prop_key] = real(keyboard_string);
+                    }
+                } catch(_e) { 
+                    // Si por algún motivo se coló una letra no válida, devolvemos a 0 por seguridad
+                    _ev_ref[$ editing_event_prop_key] = 0; 
+                }
+            } 
+            else if (editing_event_prop_type == "text") {
+                // Si el tipo es texto, se guarda como cadena de texto plano inalterada
+                _ev_ref[$ editing_event_prop_key] = keyboard_string;
+            }
+        }
+        
         // Cerramos cualquier edición activa
         active_input = "";
         editing_player_name = -1;
+        editing_event_prop_key = ""; // Resetear evento
         if (os_type == os_android) keyboard_virtual_hide();
         
     } else {
-        // Lógica de escritura mientras no se presione Enter
+        // Lógica de escritura en tiempo real para variables antiguas
         if (active_input != "") {
             if (active_input_type == "text") {
                 global.chart_data[$ active_input] = keyboard_string;
@@ -42,6 +67,8 @@ if (active_input != "" || editing_player_name != -1) {
         } else if (editing_player_name != -1) {
             player[editing_player_name] = keyboard_string;
         }
+        // NOTA: Para las propiedades de eventos, no lo actualizamos en tiempo real para 
+        // evitar errores (crash) al teclear símbolos como '-' o '.' antes del número final.
     }
 }
 
@@ -86,7 +113,7 @@ if (selected_note != -1) {
 }
 
 if (selected_event != -1) {
-    if (keyboard_check_pressed(vk_delete) || keyboard_check_pressed(vk_backspace)) {
+    if (keyboard_check_pressed(vk_delete)) {
         array_delete(events_array, selected_event, 1);
         selected_event = -1;
     }

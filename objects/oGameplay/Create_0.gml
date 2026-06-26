@@ -54,6 +54,8 @@ hit_x = room_width / 2; // Respaldo por compatibilidad
 col_is_pressed = [false, false, false];
 touch_start_y = [-1, -1, -1, -1, -1];
 audio_instance = 0;
+// --- Inicialización de Audio ---
+snd_stream = -1;
 
 song_name = global.song_to_load;
 
@@ -99,6 +101,7 @@ if (file_exists(_path)) {
     if (file_exists(_ogg_path)) {
         snd_stream = audio_create_stream(_ogg_path);
         audio_instance = audio_play_sound(snd_stream, 1, false);
+		audio_sound_gain(audio_instance,0)
     }
 }
 
@@ -158,4 +161,26 @@ cam_zoom_speed = 0.05;
 event_index_cam = 0; 
 cam_shake = 0;
 
-is_playing = true
+is_countdown = true;
+is_playing = false;
+
+// Calcular cuánto dura un "beat" en segundos
+// Fórmula: 60 / BPM = Segundos por cada golpe
+var _bpm = global.chart_data.bpm; // Cambia esto por tu variable real de BPM
+sec_per_beat = 60 / _bpm; 
+
+countdown_timer = 0;
+countdown_beats = 4; // Cambia esto si quieres una cuenta de 3, 4, o más tiempos
+
+// --- Configuración Visual ---
+countdown_sprite = sCountdown; // Tu sprite con imágenes: [0]=3, [1]=2, [2]=1, [3]=GO!
+countdown_alpha = 1.0;
+countdown_scale = 1.5;
+countdown_index = 0; // Para saber qué sub-imagen mostrar
+countdown_fading = false; // Controla cuándo empieza a desaparecer
+countdown_falling = 0
+
+// Variables para el control táctil del menú
+touch_start_y = 0;
+initial_Mn = 0;
+is_swiping = false;

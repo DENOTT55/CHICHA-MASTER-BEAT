@@ -10,6 +10,7 @@ function INT_VARS(){
 	
 	global.DEBUG1 = vk_f7
 	
+	global.BACK = vk_escape
 	global.PAUSE = vk_escape
 	global.PAUSE2 = vk_enter
 	global.Lrow = ord("S")
@@ -27,6 +28,8 @@ function INT_VARS(){
 	global.ENTER = vk_enter
 	
 	global.current_chart = "test"
+	
+	global.MENUBPM = 120
 	
 	global.players_data = {
     player1: "chichero",
@@ -47,7 +50,9 @@ function INT_VARS(){
 	global.transitionShape = sChicheroIcon
 	
 	global.goTo = rmGame
-	global.previus = rmMainMenu
+	global.previus = rmFreeplay
+	
+	device_mouse_dbclick_enable(false);
 	
 	global.Fonts = {
 		f1 : font_add_sprite_ext(sFont1,"ABCDEFGHIJKMNLOPQRSTUVWXYZabcdefghijkmnlopqrstuvwxyz:.,;!?@#$%/()|&0123456789+-",true,0),

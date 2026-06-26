@@ -2,7 +2,79 @@
 var _gui_mx = device_mouse_x_to_gui(0);
 var _gui_my = device_mouse_y_to_gui(0);
 
-if (device_mouse_check_button_pressed(0, mb_left) and global.CHARTING_MODE = true) {
+if (is_countdown) {
+    var _dt = delta_time / 1000000;
+    countdown_timer += _dt;
+
+    // Efecto de escala: El sprite se encoge un poco en cada beat para "palpitar"
+    countdown_scale = lerp(countdown_scale, 1.0, 0.1);
+
+    if (!countdown_fading) {
+        if (countdown_timer >= sec_per_beat) {
+            countdown_timer -= sec_per_beat;
+            countdown_beats -= 1;
+            countdown_scale = 1.5; // "Pop" visual al cambiar de número
+            
+            // Cambiar el índice del sprite según el conteo (ej: 4 beats -> 3, 2, 1, 0)
+            // Esto asume que tu sprite tiene los frames en orden
+            countdown_index++; 
+
+            // Cuando llegamos al "0" (el sprite de "GO!" o "READY")
+            if (countdown_beats <= 0) {
+                countdown_fading = true; // Activamos el desvanecimiento
+                
+                // --- INICIAR CANCIÓN ---
+	                is_playing = true; // La canción empieza justo en el "GO!" (recomendado para ritmo)
+	                var _ogg_path = working_directory + song_name + ".ogg";
+	                if (file_exists(_ogg_path)) {
+	                    if (snd_stream != -1) audio_destroy_stream(snd_stream);
+	                    snd_stream = audio_create_stream(_ogg_path);
+	                    audio_instance = audio_play_sound(snd_stream, 1, false);
+	                    audio_sound_set_track_position(audio_instance, 0);
+	                    current_time_sec = 0;
+	                }
+				
+            }
+        }
+    } else {
+        // --- LÓGICA DE DESVANECIMIENTO ---
+        // Se desvanece después de un breve momento en pantalla
+        countdown_alpha -= 0.05; // Velocidad del desvanecimiento
+        countdown_scale += 0.02; // El sprite crece un poco mientras se desvanece
+        
+        if (countdown_alpha <= 0) {
+            is_countdown = false; // Terminamos por completo el proceso
+			audio_sound_gain(audio_instance,1)
+        }
+    }
+}
+
+// --- LÓGICA DEL BOTÓN DE PAUSA EN PANTALLA ---
+var _btn_pausa_x = 20; // Posición X en la esquina (20px de margen)
+var _btn_pausa_y = 20; // Posición Y en la esquina (20px de margen)
+// Cambia 'spr_boton_pausa' por el nombre real de tu sprite
+var _btn_pausa_w = sprite_get_width(sPauseButton)*0.8; 
+var _btn_pausa_h = sprite_get_height(sPauseButton)*0.8;
+
+var _click_en_pausa = false;
+
+// Revisamos los 5 posibles toques en la pantalla (Multi-touch)
+for (var i = 0; i < 5; i++) {
+    if (device_mouse_check_button_pressed(i, mb_left)) {
+        var _mx_gui = device_mouse_x_to_gui(i);
+        var _my_gui = device_mouse_y_to_gui(i);
+        
+        // Comprobamos si el toque está dentro del área del botón
+        // (Esto asume que el Origen de tu sprite está en "Top Left" o 0,0)
+        if (_mx_gui > _btn_pausa_x && _mx_gui < (_btn_pausa_x + _btn_pausa_w) &&
+            _my_gui > _btn_pausa_y && _my_gui < (_btn_pausa_y + _btn_pausa_h)) {
+            _click_en_pausa = true;
+            break; // Si un dedo lo toca, dejamos de buscar
+        }
+    }
+}
+
+if (device_mouse_check_button_pressed(0, mb_left) and (!is_playing && !is_countdown)) {
     if (_gui_mx > btn_back[0] && _gui_mx < btn_back[2] && _gui_my > btn_back[1] && _gui_my < btn_back[3]) {
         if audio_exists(audio_instance)
         {if (audio_is_playing(audio_instance)) audio_stop_sound(audio_instance);}
@@ -20,53 +92,64 @@ if (keyboard_check_pressed(global.DEBUG1)) {
 }
 
 
-var chartMode = global.CHARTING_MODE
-var pausePulsed = keyboard_check_pressed(global.PAUSE) | keyboard_check_pressed(global.PAUSE2)
+var chartMode = global.CHARTING_MODE;
+// Se recomienda usar el operador lógico '||' en lugar del bit a bit '|'
+var pausePulsed = (keyboard_check_pressed(global.PAUSE) || keyboard_check_pressed(global.PAUSE2) || _click_en_pausa);
 
-if chartMode
-{
-	if (pausePulsed and oUI.Mn = 1) {
-	    if audio_exists(audio_instance)
-	    {if (audio_is_playing(audio_instance)) audio_stop_sound(audio_instance);}
-	    do_transition(rmEditor); 
-	    exit; 
-	}
-}
-
-if (pausePulsed and oUI.Mn = 1+chartMode) {
-    if audio_exists(audio_instance)
-    {if (audio_is_playing(audio_instance)) audio_stop_sound(audio_instance);}
-    do_transition(room)
-    exit; 
-}
-
-if (pausePulsed and oUI.Mn = 2+chartMode) {
-    if audio_exists(audio_instance)
-    {if (audio_is_playing(audio_instance)) audio_stop_sound(audio_instance);}
-    do_transition(rmOptions); 
-    exit; 
-}
-
-if (pausePulsed and oUI.Mn = 3+chartMode) {
-    if audio_exists(audio_instance)
-    {if (audio_is_playing(audio_instance)) audio_stop_sound(audio_instance);}
-	global.CHARTING_MODE = false
-    do_transition(rmMainMenu); 
-    exit;
-}
-
-if (pausePulsed and oUI.Mn = 0) {
-    is_playing = !is_playing;
-    if (is_playing) {
-        var _ogg_path = working_directory + global.chart_data.song_name + ".ogg";
-        if (file_exists(_ogg_path)) {
-            if (snd_stream != -1) audio_destroy_stream(snd_stream);
-            snd_stream = audio_create_stream(_ogg_path);
-            audio_instance = audio_play_sound(snd_stream, 1, false);
-            audio_sound_set_track_position(audio_instance, current_time_sec);
+// ======================================================
+// --- LÓGICA DE PAUSA (SEGURA) ---
+// ======================================================
+// Bloqueamos cualquier interacción de pausa si estamos en medio de la cuenta atrás
+if (!is_countdown) {
+    
+    if (chartMode) {
+        if (pausePulsed && oUI.Mn == 1) {
+            if audio_exists(audio_instance) {if (audio_is_playing(audio_instance)) audio_stop_sound(audio_instance);}
+            do_transition(rmEditor); 
+			audio_play_sound(snd_menuBack,1,false,0.5)
+            exit; 
         }
-    } else {
-        if (audio_is_playing(audio_instance)) audio_pause_sound(audio_instance);
+    }
+
+    if (pausePulsed && oUI.Mn == 1 + chartMode) {
+        if audio_exists(audio_instance) {if (audio_is_playing(audio_instance)) audio_stop_sound(audio_instance);}
+        do_transition(room);
+		audio_play_sound(snd_menuPlay,1,false,0.5)
+        exit; 
+    }
+
+    if (pausePulsed && oUI.Mn == 2 + chartMode) {
+        if audio_exists(audio_instance) {if (audio_is_playing(audio_instance)) audio_stop_sound(audio_instance);}
+        do_transition(rmOptions); 
+		audio_play_sound(snd_menuPlay,1,false,0.5)
+        exit; 
+    }
+
+    if (pausePulsed && oUI.Mn == 3 + chartMode) {
+        if audio_exists(audio_instance) {if (audio_is_playing(audio_instance)) audio_stop_sound(audio_instance);}
+        global.CHARTING_MODE = false;
+        do_transition(rmFreeplay); 
+		audio_play_sound(snd_menuBack,1,false,0.5)
+        exit;
+    }
+
+    // Toggle Play/Pause normal
+    if (pausePulsed && oUI.Mn == 0) {
+        is_playing = !is_playing; // Alternar entre jugando y pausado
+        
+        if (is_playing) {
+            // Reanudar canción
+            var _ogg_path = working_directory + song_name + ".ogg";
+            if (file_exists(_ogg_path)) {
+                if (snd_stream != -1) audio_destroy_stream(snd_stream);
+                snd_stream = audio_create_stream(_ogg_path);
+                audio_instance = audio_play_sound(snd_stream, 1, false);
+                audio_sound_set_track_position(audio_instance, current_time_sec);
+            }
+        } else {
+            // Pausar canción
+            if (audio_is_playing(audio_instance)) audio_pause_sound(audio_instance);
+        }
     }
 }
 
@@ -77,6 +160,20 @@ if (is_playing) {
         current_time_sec += delta_time / 1000000;
     }
 }
+
+cam_x = lerp(cam_x, cam_target_x, cam_lerp_speed);
+cam_y = lerp(cam_y, cam_target_y, cam_lerp_speed);
+cam_zoom = lerp(cam_zoom, cam_target_zoom, cam_zoom_speed);
+
+var _sx = random_range(-cam_shake, cam_shake);
+var _sy = random_range(-cam_shake, cam_shake);
+cam_shake = lerp(cam_shake, 0, 0.1); 
+
+var _view_w = 1152 * cam_zoom; 
+var _view_h = 648 * cam_zoom;
+
+camera_set_view_size(view_camera[0], _view_w, _view_h);
+camera_set_view_pos(view_camera[0], (cam_x - _view_w/2) + _sx, (cam_y - _view_h/2) + _sy);
 
 if !is_playing {exit}
 
@@ -384,6 +481,10 @@ if (variable_instance_exists(id, "events_array") && array_length(events_array) >
                             }
                         }
                     break;
+					
+					case 5: 
+						cam_zoom = cam_target_zoom*0.8
+                    break;
                 }
                 
                 show_debug_message("Evento disparado a las: " + string(_event.time));
@@ -393,16 +494,3 @@ if (variable_instance_exists(id, "events_array") && array_length(events_array) >
     }
 }
 
-cam_x = lerp(cam_x, cam_target_x, cam_lerp_speed);
-cam_y = lerp(cam_y, cam_target_y, cam_lerp_speed);
-cam_zoom = lerp(cam_zoom, cam_target_zoom, cam_zoom_speed);
-
-var _sx = random_range(-cam_shake, cam_shake);
-var _sy = random_range(-cam_shake, cam_shake);
-cam_shake = lerp(cam_shake, 0, 0.1); 
-
-var _view_w = 1152 * cam_zoom; 
-var _view_h = 648 * cam_zoom;
-
-camera_set_view_size(view_camera[0], _view_w, _view_h);
-camera_set_view_pos(view_camera[0], (cam_x - _view_w/2) + _sx, (cam_y - _view_h/2) + _sy);

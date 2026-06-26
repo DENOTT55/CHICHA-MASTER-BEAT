@@ -1,16 +1,10 @@
 angle = 0
+if room != rmFreeplay {exit}
 
 songs = [
-    ["Song 1", sChicheroIcon, sChicheroArt],
-    ["MMMMMMMMMM", sChicheroIcon, sChicheroArt],
-    ["a", sChicheroIcon, sChicheroArt],
-	["MMMMMMMMMM", sMissingIcon, smissingleft],
-	["MMMMMMMMMM", sMissingIcon, smissingleft],
-	["MMMMMMMMMM", sMissingIcon, smissingleft],
-	["MMMMMMMMMM", sMissingIcon, smissingleft],
-	["MMMMMMMMMM", sChicheroIcon, sChicheroArt],
-	["MMMMMMMMMM", sChicheroIcon, sChicheroArt],
-	["test", sChicheroIcon, sChicheroArt],
+	["Chicha Mania", sChicheroIcon, sChicheroArt],
+    ["Carcel Infierno", sChicheroIcon, sChicheroArt],
+    ["Test", sChicheroIcon, sChicheroArt],
 ]
 
 // --- NUEVAS VARIABLES PARA EL ARTE ---

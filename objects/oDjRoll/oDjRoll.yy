@@ -11,8 +11,8 @@
   "name":"oDjRoll",
   "overriddenProperties":[],
   "parent":{
-    "name":"MainMenu",
-    "path":"folders/OBJECTS/MainMenu.yy",
+    "name":"FREEPLAY",
+    "path":"folders/OBJECTS/FREEPLAY.yy",
   },
   "parentObjectId":null,
   "persistent":false,

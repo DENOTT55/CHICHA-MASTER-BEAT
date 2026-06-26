@@ -1,6 +1,33 @@
 var mx = mouse_x;
 var my = mouse_y;
 
+// Si estabas editando un texto de un evento y tocas fuera del panel, lo guardamos/cerramos
+if (editing_event_prop_key != "" && mx < room_width - 320) {
+    if (selected_event != -1) {
+        var _ev_ref = events_array[selected_event];
+        
+        if (editing_event_prop_type == "number") {
+            try {
+                if (keyboard_string == "") {
+                    _ev_ref[$ editing_event_prop_key] = 0;
+                } else {
+                    _ev_ref[$ editing_event_prop_key] = real(keyboard_string);
+                }
+            } catch(_e) {
+                _ev_ref[$ editing_event_prop_key] = 0;
+            }
+        } 
+        else if (editing_event_prop_type == "text") {
+            // Guardado como texto plano
+            _ev_ref[$ editing_event_prop_key] = keyboard_string;
+        }
+    }
+    
+    // Limpiamos la variable de edición y ocultamos teclado en móviles
+    editing_event_prop_key = "";
+    if (os_type == os_android) keyboard_virtual_hide();
+}
+
 if (show_meta_menu) {
     // Si haces clic fuera de cualquier caja y estás escribiendo
     if (mouse_check_button_pressed(mb_left) && active_input != "") {
@@ -71,64 +98,112 @@ if (mx > btn_play[0] && mx < btn_play[2] && my > btn_play[1] && my < btn_play[3]
 
 
 
-// --- CLIC EN LA GRILLA (COLOCAR/SELECCIONAR NOTAS) ---
+// --- CLIC EN LA GRILLA (COLOCAR/SELECCIONAR NOTAS Y EVENTOS) ---
 if (click_valid) {
     var _clicked_col = -1;
     for (var c = 0; c < 3; c++) {
         if (mx >= col_x[c] - (col_width/2) && mx <= col_x[c] + (col_width/2)) {
-            _clicked_col = c; break;
+            _clicked_col = c;
+            break;
         }
     }
 
     if (_clicked_col != -1) {
-        var _clicked_time = current_time_sec + ((hit_y - my) / global.chart_data.note_speed/100);
         
-        var _beat_dur = 60 / global.chart_data.bpm;
-        var _snap_interval = _beat_dur / global.chart_data.snap_div; 
-        _clicked_time = round(_clicked_time / _snap_interval) * _snap_interval;
+        // 1. Obtenemos el tiempo REAL donde diste clic (Sin aplicar Snap)
+        var _raw_time = current_time_sec + ((hit_y - my) / global.chart_data.note_speed/100);
         
+        // 2. Tolerancia dinámica de aprox 32 píxeles para "tocar" el evento visualmente
+        var _tolerancia = 32 / (global.chart_data.note_speed * 100);
+
         if (_clicked_col == 0) {
+            // ==========================================
             // MANEJO DE EVENTOS (COLUMNA 0)
+            // ==========================================
             selected_note = -1;
             var _found_ev = false;
             
+            // FASE DE SELECCIÓN: Busca visualmente si estás clicando un evento
             for (var i = 0; i < array_length(events_array); i++) {
-                if (abs(events_array[i].time - _clicked_time) < 0.05) {
-                    selected_event = i; _found_ev = true; break;
+                if (abs(events_array[i].time - _raw_time) < _tolerancia) {
+                    selected_event = i;
+                    _found_ev = true; 
+                    break;
                 }
             }
 
-            if (!_found_ev && _clicked_time >= 0) {
-                var _base_meta = get_event_metadata(0);
-                var _new_ev = { time: _clicked_time, type: 0 };
-
-                for(var k=0; k < array_length(_base_meta.properties); k++) {
-                    var _p = _base_meta.properties[k];
-                    _new_ev[$ _p.key] = _p.def;
+            // FASE DE CREACIÓN: Si no tocaste ningún evento, creamos uno
+            if (!_found_ev && _raw_time >= 0) {
+                var _beat_dur = 60 / global.chart_data.bpm;
+                var _snap_interval = _beat_dur / global.chart_data.snap_div; 
+                var _snapped_time = round(_raw_time / _snap_interval) * _snap_interval; // Ahora aplicamos Snap
+                
+                // Doble chequeo para evitar sobreescribir si el snap cae directo en uno ya existente
+                var _already_exists = false;
+                for (var i = 0; i < array_length(events_array); i++) {
+                    if (abs(events_array[i].time - _snapped_time) < 0.01) {
+                        selected_event = i;
+                        _already_exists = true; 
+                        break;
+                    }
                 }
-                array_push(events_array, _new_ev);
-                selected_event = array_length(events_array) - 1;
-            }
-        } else {
-            // MANEJO DE NOTAS
-            selected_event = -1;
-            var _found = false;
-            for (var i = 0; i < array_length(notes_array); i++) {
-                var _n = notes_array[i];
-                if (_n.col == _clicked_col && abs(_n.time - _clicked_time) < 0.05) {
-                    selected_note = i; _found = true; break;
+
+                if (!_already_exists) {
+                    var _base_meta = get_event_metadata(current_event_tool);
+                    var _new_ev = { time: _snapped_time, type: current_event_tool };
+
+                    for(var k = 0; k < array_length(_base_meta.properties); k++) {
+                        var _p = _base_meta.properties[k];
+                        _new_ev[$ _p.key] = _p.def;
+                    }
+                    array_push(events_array, _new_ev);
+                    selected_event = array_length(events_array) - 1;
                 }
             }
             
-            if (!_found && _clicked_time >= 0) {
-                array_push(notes_array, {
-                    col: _clicked_col,
-                    time: _clicked_time,
-                    hold: 0,
-                    type: 0,
-					playerID: charPlaceID,
-                });
-                selected_note = array_length(notes_array) - 1;
+        } else {
+            // ==========================================
+            // MANEJO DE NOTAS
+            // ==========================================
+            selected_event = -1;
+            var _found_note = false;
+            
+            // FASE DE SELECCIÓN DE NOTAS
+            for (var i = 0; i < array_length(notes_array); i++) {
+                var _n = notes_array[i];
+                if (_n.col == _clicked_col && abs(_n.time - _raw_time) < _tolerancia) {
+                    selected_note = i;
+                    _found_note = true; 
+                    break;
+                }
+            }
+            
+            // FASE DE CREACIÓN DE NOTAS
+            if (!_found_note && _raw_time >= 0) {
+                var _beat_dur = 60 / global.chart_data.bpm;
+                var _snap_interval = _beat_dur / global.chart_data.snap_div; 
+                var _snapped_time = round(_raw_time / _snap_interval) * _snap_interval;
+                
+                var _already_exists = false;
+                for (var i = 0; i < array_length(notes_array); i++) {
+                    var _n = notes_array[i];
+                    if (_n.col == _clicked_col && abs(_n.time - _snapped_time) < 0.01) {
+                        selected_note = i;
+                        _already_exists = true; 
+                        break;
+                    }
+                }
+                
+                if (!_already_exists) {
+                    array_push(notes_array, {
+                        col: _clicked_col,
+                        time: _snapped_time,
+                        hold: 0,
+                        type: 0,
+                        playerID: charPlaceID,
+                    });
+                    selected_note = array_length(notes_array) - 1;
+                }
             }
         }
     }

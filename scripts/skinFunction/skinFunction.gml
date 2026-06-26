@@ -31,7 +31,10 @@ function skinFunction(_name = playerName){
 			    idle_r:  { spr: smissingleft, loop_start: 0, loop_end: -1 },
     
 			    // Ejemplo de un Tap normal (no usa loop, solo se reproduce 1 vez en ACTION)
-			    hit:   { spr: schicherohit, loop_start: 0, loop_end: -1 },
+			    hitL:   { spr: schicherohit, loop_start: 0, loop_end: -1 },
+				swipeL:   { spr: schicheroswipe, loop_start: 0, loop_end: -1 },
+				hitR:   { spr: schicherohit, loop_start: 0, loop_end: -1 },
+				swipeR:   { spr: schicheroswipe, loop_start: 0, loop_end: -1 },
 				miss:   { spr: schicheromiss, loop_start: 0, loop_end: 1 },
 				hold:   { spr: schicherohold, loop_start: 7, loop_end: -1 },
 				misshold:   { spr: schicheromisshold, loop_start: 0, loop_end: 1 },
@@ -45,6 +48,12 @@ function skinFunction(_name = playerName){
 	    break;
 		
 		//----------EO--------------------------------
+		
+		case "logo":
+	        anim_config = {
+			    idle:    { spr: sLogo, loop_start: 0, loop_end: -1 },
+			};
+	    break;
 		
 		case "chichamovil":
 	        anim_config = {

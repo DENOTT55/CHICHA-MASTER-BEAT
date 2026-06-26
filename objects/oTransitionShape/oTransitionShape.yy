@@ -11,8 +11,8 @@
   "name":"oTransitionShape",
   "overriddenProperties":[],
   "parent":{
-    "name":"OBJECTS",
-    "path":"folders/OBJECTS.yy",
+    "name":"CONFIG AND MORE",
+    "path":"folders/OBJECTS/CONFIG AND MORE.yy",
   },
   "parentObjectId":null,
   "persistent":false,

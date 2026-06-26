@@ -27,3 +27,5 @@ else
 
 hitAngle = 0
 hitScale = 0
+
+menu_offsets = array_create(array_length(menuRow), 0);

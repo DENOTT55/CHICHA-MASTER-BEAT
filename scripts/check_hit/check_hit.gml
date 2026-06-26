@@ -15,15 +15,21 @@ function check_hit(_col, _time_now, _input_type) {
 				{
 					var _player = playerChecker(_n.playerID)
 					
-					if _player.playerID <= global.chart_data.playersMax
-					{_player.toX = hit_x_col[_col]}
-					else 
-					{_player = playerChecker(0);_player.toX = hit_x_col[_col]}
+					if object_exists(_player)
+					{
+						if _player.playerID <= global.chart_data.playersMax
+						{_player.toX = hit_x_col[_col]}
+						else 
+						{_player = playerChecker(0);_player.toX = hit_x_col[_col]}
+					}
 					
 					//_player.toX = hit_x_col[_col]
 					
 					crear_feedback(_col, _input_type);
-                    reproducir_animacion("hit",_player.playerID)
+                    if _col == 1
+							{reproducir_animacion("hitL",_player.playerID);_player.image_xscale = 1}
+							else //if _col == 2
+							{reproducir_animacion("hitR",_player.playerID);_player.image_xscale = -1}
                     array_delete(oGameplay.notes_array, i, 1);
 					oUI.hitAngle = choose(5,-5);oUI.hitScale = 0.2
 				}

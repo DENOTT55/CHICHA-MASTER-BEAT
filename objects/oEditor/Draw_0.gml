@@ -425,31 +425,129 @@ if (show_meta_menu) {
 
     // --- MENÚ ESCALABLE DE EVENTOS ---
     if (selected_event != -1) {
-        var _panel_x = room_width - 320; 
-        var _ev_ref = events_array[selected_event];
+        // --- DIBUJAR PROPIEDADES EN EL PANEL LATERAL ---
+		var _ev_ref = events_array[selected_event]; // ¡Esta era la línea que faltaba!
         var _meta = get_event_metadata(_ev_ref.type);
-
-        draw_set_color(c_dkgray);
-        draw_rectangle(_panel_x, 80, room_width - 10, 520, false); 
-        draw_set_color(c_white);
-        
-        draw_text_transformed(_panel_x + 10, 90, "EVENTO: " + _meta.name, 1, 1, 0);
-        draw_line(_panel_x + 10, 115, room_width - 20, 115);
-
         var _props = _meta.properties;
-        var _ey_text = 150; 
+		var _panel_x = room_width - 320; // El borde izquierdo del panel lateral
+        var _panel_y = 0;                // El tope superior de la pantalla
+        var _ey_text = _panel_y + 80; // Altura inicial del panel de propiedades
 
-        for(var j=0; j < array_length(_props); j++) {
-            var _p = _props[j]; 
-            var _key = _p.key;  
+        for (var k = 0; k < array_length(_props); k++) {
+            var _p = _props[k];
+            var _key = _p.key;
             var _current_val = _ev_ref[$ _key];
-
-            draw_set_color(c_white);
-            draw_text(_panel_x + 10, _ey_text, _p.name + ":");
             
-            draw_set_color(c_aqua);
-            draw_text(_panel_x + 10, _ey_text + 30, string(_current_val)); 
+            // 1. Dibujar el nombre de la propiedad
+            draw_set_color(c_white);
+            draw_text(_panel_x + 10, _ey_text, _p.name);
+            
+            // Coordenadas base para la caja de texto/input
+            var _box_x1 = _panel_x + 10;
+            var _box_y1 = _ey_text + 25;
+            var _box_x2 = _panel_x + 150;
+            var _box_y2 = _box_y1 + 30;
+            
+            // 2. Dibujar recuadro de texto (Sólo si es tipo "number" o "text")
+            if (_p.type == "number" || _p.type == "text") {
+                var _is_editing = (editing_event_prop_key == _key);
+                
+                // Fondo y borde de la caja
+                draw_set_color(_is_editing ? c_ltgray : c_black);
+                draw_rectangle(_box_x1, _box_y1, _box_x2, _box_y2, false);
+                draw_set_color(c_white);
+                draw_rectangle(_box_x1, _box_y1, _box_x2, _box_y2, true);
+                
+                draw_set_color(_is_editing ? c_black : c_aqua);
+                var _display_text = _is_editing ? keyboard_string + "|" : string(_current_val);
+                draw_text(_box_x1 + 5, _box_y1 + 5, _display_text);
 
+                // Activar modo edición al hacer clic en la caja
+                if (mouse_check_button_pressed(mb_left) && mouse_x > _box_x1 && mouse_x < _box_x2 && mouse_y > _box_y1 && mouse_y < _box_y2) {
+                    editing_event_prop_key = _key;
+                    editing_event_prop_type = _p.type;
+                    keyboard_string = string(_current_val);
+                    if (os_type == os_android) {
+                        var _kb_type = (_p.type == "number") ? kbv_type_numbers : kbv_type_default;
+                        keyboard_virtual_show(_kb_type, kbv_returnkey_done, kbv_autocapitalize_none, false);
+                    }
+                }
+            }
+            
+            // 3. Dibujar botones + y - (Aparecen si el tipo NO es "text")
+            if (_p.type != "text") {
+                var _btn_w = 35;
+                var _btn_h = 30;
+                
+                // Si es tipo lista va pegado a la izquierda. Si es número va inmediatamente después de la caja de texto.
+                var _bx1 = (_p.type == "list") ? (_panel_x + 10) : (_box_x2 + 10);
+                var _bx2 = _bx1 + _btn_w + 5;
+                
+                // Si es lista, dibujamos el texto de la opción actual al lado de los botones
+                if (_p.type == "list") {
+                    draw_set_color(c_aqua);
+                    draw_text(_panel_x + 100, _box_y1 + 5, string(_current_val));
+                }
+                
+                // Dibujar e interactuar con el Botón (+)
+                var _hov_plus = (mouse_x > _bx1 && mouse_x < _bx1 + _btn_w && mouse_y > _box_y1 && mouse_y < _box_y1 + _btn_h);
+                draw_set_color(_hov_plus ? c_gray : c_dkgray);
+                draw_rectangle(_bx1, _box_y1, _bx1 + _btn_w, _box_y1 + _btn_h, false);
+                draw_set_color(c_white);
+                draw_rectangle(_bx1, _box_y1, _bx1 + _btn_w, _box_y1 + _btn_h, true);
+                draw_text(_bx1 + 12, _box_y1 + 5, "+");
+                
+                // Dibujar e interactuar con el Botón (-)
+                var _hov_minus = (mouse_x > _bx2 && mouse_x < _bx2 + _btn_w && mouse_y > _box_y1 && mouse_y < _box_y1 + _btn_h);
+                draw_set_color(_hov_minus ? c_gray : c_dkgray);
+                draw_rectangle(_bx2, _box_y1, _bx2 + _btn_w, _box_y1 + _btn_h, false);
+                draw_set_color(c_white);
+                draw_rectangle(_bx2, _box_y1, _bx2 + _btn_w, _box_y1 + _btn_h, true);
+                draw_text(_bx2 + 14, _box_y1 + 5, "-");
+                
+                // Acciones de clic para los botones +/-
+                if (mouse_check_button_pressed(mb_left) && mouse_y > _box_y1 && mouse_y < _box_y1 + _btn_h) {
+                    
+                    // Lógica del Botón (+)
+                    if (mouse_x > _bx1 && mouse_x < _bx1 + _btn_w) {
+                        if (_p.type == "list") {
+                            var _opts = _p.options;
+                            var _idx = 0;
+                            for(var o=0; o<array_length(_opts); o++) { if (_opts[o] == _current_val) _idx = o; }
+                            _idx++;
+                            if (_idx >= array_length(_opts)) _idx = 0;
+                            _ev_ref[$ _key] = _opts[_idx];
+                        } else if (_p.type == "number") {
+                            _ev_ref[$ _key] += _p.step;
+                            // Si se modifica con el botón y se estaba editando en texto, sincroniza la barra
+                            if (editing_event_prop_key == _key) keyboard_string = string(_ev_ref[$ _key]);
+                        }
+                    }
+                    
+                    // Lógica del Botón (-)
+                    if (mouse_x > _bx2 && mouse_x < _bx2 + _btn_w) {
+                        if (_p.type == "list") {
+                            var _opts = _p.options;
+                            var _idx = 0;
+                            for(var o=0; o<array_length(_opts); o++) { if (_opts[o] == _current_val) _idx = o; }
+                            _idx--;
+                            if (_idx < 0) _idx = array_length(_opts) - 1;
+                            _ev_ref[$ _key] = _opts[_idx];
+                        } else if (_p.type == "number") {
+                            _ev_ref[$ _key] -= _p.step;
+                            // Si se modifica con el botón y se estaba editando en texto, sincroniza la barra
+                            if (editing_event_prop_key == _key) keyboard_string = string(_ev_ref[$ _key]);
+                        }
+                    }
+                }
+            }
+            
+            // --- ¡CORRECCIÓN DE SOLAPAMIENTO! ---
+            // Sumamos altura para que la siguiente propiedad baje correctamente y no se pisen
+            _ey_text += 70;
+        }
+			
+			/*
             var _btn_w = 45;
             var _btn_h = 45;
             var bx1 = room_width - 110; 
@@ -494,11 +592,71 @@ if (show_meta_menu) {
                     }
                 }
             }
-            _ey_text += 70; 
+            _ey_text += 70; */
+        }
+    }
+//}
+draw_set_halign(fa_center);draw_set_font(global.Fonts.f1)
+draw_set_alpha(alpha);
+draw_text(_w/2, 30, TXT);
+draw_set_alpha(1);
+draw_set_halign(fa_left);draw_set_font(global.Fonts.f1m)
+
+// 6. MENÚ DESPLEGABLE DE EVENTOS (Esquina Superior Derecha)
+var _dd_w = 230;
+var _dd_h = 40;
+var _dd_x = _w - _dd_w - 10;
+var _dd_y = 10;
+
+var _total_events = get_event_metadata(-1);
+var _current_tool_meta = get_event_metadata(current_event_tool);
+
+// Botón principal del desplegable
+draw_set_color(c_dkgray);
+draw_rectangle(_dd_x, _dd_y, _dd_x + _dd_w, _dd_y + _dd_h, false);
+draw_set_color(c_white);
+draw_rectangle(_dd_x, _dd_y, _dd_x + _dd_w, _dd_y + _dd_h, true);
+draw_text(_dd_x + 10, _dd_y + 10, "Ev: " + _current_tool_meta.name);
+
+if (mouse_check_button_pressed(mb_left)) {
+    if (mouse_x > _dd_x && mouse_x < _dd_x + _dd_w && mouse_y > _dd_y && mouse_y < _dd_y + _dd_h) {
+        show_event_dropdown = !show_event_dropdown;
+    } else if (show_event_dropdown) {
+        // Cerrar lista si se cliquea afuera
+        if (mouse_x < _dd_x || mouse_x > _dd_x + _dd_w || mouse_y > _dd_y + _dd_h + (_total_events * 40)) {
+            show_event_dropdown = false;
         }
     }
 }
 
-draw_set_alpha(alpha);
-draw_text(_w/2, 30, TXT);
-draw_set_alpha(1);
+// Dibujar la lista desplegada
+if (show_event_dropdown) {
+    for (var i = 0; i < _total_events; i++) {
+        var _meta_i = get_event_metadata(i);
+        var _item_y = _dd_y + _dd_h + (i * 40);
+        
+        var _hover = (mouse_x > _dd_x && mouse_x < _dd_x + _dd_w && mouse_y > _item_y && mouse_y < _item_y + 40);
+        draw_set_color(_hover ? c_gray : c_black);
+        draw_rectangle(_dd_x, _item_y, _dd_x + _dd_w, _item_y + 40, false);
+        draw_set_color(c_white);
+        draw_rectangle(_dd_x, _item_y, _dd_x + _dd_w, _item_y + 40, true);
+        draw_text(_dd_x + 10, _item_y + 10, _meta_i.name);
+
+        if (_hover && mouse_check_button_pressed(mb_left)) {
+            current_event_tool = i; // Cambiar la herramienta a utilizar
+            show_event_dropdown = false;
+            
+            // Si hay un evento seleccionado en el panel, convertirlo a este nuevo tipo
+            if (selected_event != -1) {
+                var _ev_ref = events_array[selected_event];
+                _ev_ref.type = i;
+                
+                // Limpiar y resetear propiedades a las por defecto del nuevo tipo
+                var _new_props = _meta_i.properties;
+                for(var k=0; k < array_length(_new_props); k++) {
+                    _ev_ref[$ _new_props[k].key] = _new_props[k].def;
+                }
+            }
+        }
+    }
+}

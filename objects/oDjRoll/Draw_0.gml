@@ -6,6 +6,7 @@ draw_sprite_ext(sDjRoll,1,x,y,1,1,angle,c_white,1)
 if angle < 360 {angle++}
 else{angle = 0}
 
+if room != rmFreeplay {exit}
 
 // 1. Configurar la alineación del texto
 draw_set_halign(fa_left);   

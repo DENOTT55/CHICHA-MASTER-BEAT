@@ -10,8 +10,8 @@
   "name":"oFeedback",
   "overriddenProperties":[],
   "parent":{
-    "name":"OBJECTS",
-    "path":"folders/OBJECTS.yy",
+    "name":"GAME",
+    "path":"folders/OBJECTS/GAME.yy",
   },
   "parentObjectId":null,
   "persistent":false,

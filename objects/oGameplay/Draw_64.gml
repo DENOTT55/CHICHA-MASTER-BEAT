@@ -8,8 +8,8 @@ draw_set_alpha(1)
 // 1. FONDOS MODO SPLIT Y ALERTA (Corregido para Móvil)
 // ==========================================================
 if (global.alerta_cambio_input) {
-    draw_set_halign(fa_center);
-    draw_text(_W/2, 50, "CAMBIO APROXIMANDOSE!");
+    //draw_set_halign(fa_center);
+    //draw_text(_W/2, 50, "CAMBIO APROXIMANDOSE!");
 }
 
 // Convertimos el Alpha en una variable de la instancia para que el Lerp funcione
@@ -64,7 +64,7 @@ if (_progreso >= 1 && !cancion_terminada) {
 // 3. UI ORIGINAL (Textos, Botón y Puntuación)
 // ==========================================================
 draw_set_halign(fa_left);
-
+/*
 if global.CHARTING_MODE = true
 {
 	// Botón Volver
@@ -73,7 +73,7 @@ if global.CHARTING_MODE = true
 	draw_set_color(c_white);
 	draw_text(btn_back[0] + 10, btn_back[1] + 15, "< VOLVER");
 }
-
+*/
 /*
 // Textos de Combo
 if (combo > 3) {
@@ -94,13 +94,16 @@ draw_text_transformed(_W/16, 200, string(global.players_data.player6), 1.5, 1.5,
 */
 
 // Puntuación lateral
+/*
 if (object_exists(oPlayer)) {
     draw_set_halign(fa_center);draw_set_valign(fa_middle);
     
     // Cambiamos view_get_hport por _W para anclarlo perfecto a la derecha de la pantalla
     draw_text(_W / 2, 20, "SCORE: " + string(puntos)+" | "+"MAX COMBO: " + string(max_combo)+" | "+"MISSES: " + string(MISSES));
-}
+}*/
 
 // Resetear variables de dibujo por buenas prácticas
 draw_set_halign(fa_left);
 draw_set_font(-1);
+
+

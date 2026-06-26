@@ -75,13 +75,13 @@ meta_menu_layout = [
         tab_name: "Opciones",
         elements: [
             // Ejemplo de Checkbox. Asegúrate de que global.CHARTING_MODE esté en global.chart_data si vas a usarlo así.
-            { key: "is_modding", label: "Modo Modding", type: "bool" } 
+            { key: "silent", label: "Silenciar sonidos in-Game", type: "bool" } 
         ]
     }
 ];
 
 // Nos aseguramos que los booleanos existan en el chart_data para evitar crash
-if (!variable_struct_exists(global.chart_data, "is_modding")) global.chart_data.is_modding = false;
+if (!variable_struct_exists(global.chart_data, "silent")) global.chart_data.silent = false;
 
 // ... (Sigue con el resto de tu Create original, como loadSong etc.) ...
 
@@ -108,6 +108,12 @@ drag_threshold = 15; // Píxeles de holgura antes de considerarlo un scroll
 col_x = [0, 0, 0];
 col_width = 100;
 hit_y = 0; 
+
+// --- NUEVAS VARIABLES PARA EDICIÓN DE EVENTOS Y DESPLEGABLE ---
+current_event_tool = 0;        // ID del evento seleccionado en la lista desplegable
+show_event_dropdown = false;   // Controla si se muestra la lista desplegable
+editing_event_prop_key = "";   // Qué propiedad del evento estamos editando
+editing_event_prop_type = "";  // Si es un número o texto
 
 #region // Cargar chart al iniciar
 if (loadSong == false) {

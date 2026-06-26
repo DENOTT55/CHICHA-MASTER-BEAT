@@ -1,9 +1,12 @@
+if room != rmFreeplay {exit}
+
 // 1. Controles base (Teclado)
 var _prev_selected = selected_song;
 
 var _up = keyboard_check_pressed(global.UP);
 var _down = keyboard_check_pressed(global.DOWN);
 var _enter = keyboard_check_pressed(global.ENTER);
+var _back = keyboard_check_pressed(vk_escape) || keyboard_check_pressed(vk_backspace);
 
 // --- NUEVA LÓGICA TÁCTIL EN TIEMPO REAL ---
 var _swipe_threshold = 10; // Lo bajamos para que reaccione más rápido al dedo
@@ -15,6 +18,11 @@ if (device_mouse_check_button_pressed(0, mb_left)) {
     touch_start_y = device_mouse_y(0);
     initial_selected = selected_song; // Congelamos la selección inicial
     is_swiping = false;
+}
+
+if (_back) {
+    do_transition(rmMainMenu);
+	audio_play_sound(snd_menuBack,1,false,0.5)
 }
 
 // MIENTRAS MANTIENES EL DEDO (El scroll en tiempo real)
@@ -51,11 +59,11 @@ if (device_mouse_check_button_released(0, mb_left)) {
 
 // Controles de teclado
 if (_up and !STOPMOVING) {
-    selected_song--;
+    selected_song--;audio_play_sound(snd_menuClick,1,false,0.5)
     if (selected_song < 0) selected_song = array_length(songs) - 1;
 }
 if (_down and !STOPMOVING) {
-    selected_song++;
+    selected_song++;audio_play_sound(snd_menuClick,1,false,0.5,0,0.9)
     if (selected_song >= array_length(songs)) selected_song = 0;
 }
 
@@ -115,6 +123,7 @@ if (_enter and !STOPMOVING) {
         global.transitionShape = songs[selected_song][1];
         do_transition(rmGame);
         STOPMOVING = true;
+		audio_play_sound(snd_menuPlay,1,false,0.5)
     } else {
         show_error_msg = true;
         alarm[0] = 120; 
