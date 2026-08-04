@@ -22,8 +22,8 @@ options_list = [
         category: "Juego y Controles",
         items: [
             { name: "Cambiar Controles", key: "rebind_keys", type: "action", val: 0 },
-            { name: "Velocidad de Notas", key: "note_speed", type: "list", options: ["x1.0", "x1.5", "x2.0", "x2.5", "x3.0"], val: 0 },
-            { name: "Modo Autoplay", key: "autoplay", type: "check", val: false, frame: 0 }
+            //{ name: "Velocidad de Notas", key: "note_speed", type: "list", options: ["x1.0", "x1.5", "x2.0", "x2.5", "x3.0"], val: 0 },
+            { name: "Mostrar division de pantalla", key: "splitScreen", type: "check", val: false, frame: 0 }
         ]
     }
 ];
@@ -93,7 +93,7 @@ function scr_save_settings(_options_list) {
         resolution: _options_list[0].items[0].val,
         disable_aa: _options_list[0].items[1].val,
         note_speed: _options_list[1].items[1].val,
-        autoplay: _options_list[1].items[2].val,
+        splitScreen: _options_list[1].items[2].val,
         
         // Guardamos las teclas globales
         key_Lrow: global.Lrow,

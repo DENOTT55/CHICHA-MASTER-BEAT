@@ -46,6 +46,8 @@ function INT_VARS(){
 		playersMax: 1,
 	};
 	
+	global.SHOWSPLIT = true
+	
 	global.song_to_load = global.chart_data.song_name
 	global.transitionShape = sChicheroIcon
 	

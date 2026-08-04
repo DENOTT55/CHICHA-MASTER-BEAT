@@ -14,22 +14,25 @@ if (global.alerta_cambio_input) {
     //draw_text(_W/2, 50, "CAMBIO APROXIMANDOSE!");
 }
 
-// Convertimos el Alpha en una variable de la instancia para que el Lerp funcione
-if (!variable_instance_exists(id, "alpha_split")) alpha_split = 0;
+if global.SHOWSPLIT == true
+{
+	// Convertimos el Alpha en una variable de la instancia para que el Lerp funcione
+	if (!variable_instance_exists(id, "alpha_split")) alpha_split = 0;
 
-var _ALPto = (global.modo_input == "SPLIT") ? 0.1 : 0;
-alpha_split = lerp(alpha_split, _ALPto, 0.1);
+	var _ALPto = (global.modo_input == "SPLIT") ? 0.1 : 0;
+	alpha_split = lerp(alpha_split, _ALPto, 0.1);
 
-if (alpha_split > 0.01) {
-    draw_set_alpha(alpha_split);
+	if (alpha_split > 0.01) {
+	    draw_set_alpha(alpha_split);
 
-    draw_set_color(c_green);
-    draw_rectangle(0, 0, _W/2, _H, false); // Mitad Izquierda
+	    draw_set_color(c_green);
+	    draw_rectangle(0, 0, _W/2, _H, false); // Mitad Izquierda
 
-    draw_set_color(c_aqua);
-    draw_rectangle(_W/2, 0, _W, _H, false); // Mitad Derecha
+	    draw_set_color(c_aqua);
+	    draw_rectangle(_W/2, 0, _W, _H, false); // Mitad Derecha
     
-    draw_set_alpha(1); // RESTAURAR ALPHA: Vital para que el resto de textos no se vuelvan transparentes
+	    draw_set_alpha(1); // RESTAURAR ALPHA: Vital para que el resto de textos no se vuelvan transparentes
+	}
 }
 
 // ==========================================================

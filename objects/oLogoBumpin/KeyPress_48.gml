@@ -1,1 +1,1 @@
-//do_transition(rmOptions,"fade")
+do_transition(rmInt)

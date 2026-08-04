@@ -20,9 +20,10 @@ var _icon_margin = 15;
 var _base_width = sprite_get_width(sSongCapsule); 
 
 for (var i = 0; i < array_length(songs); ++i) {
-    var _song_name = songs[i][0];
-    var _ICONOS    = songs[i][1]; 
-    
+    var _song_name	= songs[i][0];
+    var _ICONOS		= songs[i][1]; 
+    var _autor		= songs[i][3];
+	
     var _y = center_y + (i * item_spacing) - current_scroll;
     var _x = song_visual_x[i];
     var _alpha = song_visual_alpha[i];
@@ -37,8 +38,12 @@ for (var i = 0; i < array_length(songs); ++i) {
 
     var _previous_alpha = draw_get_alpha();
     draw_set_alpha(_alpha);
-
-    draw_text(_x + _pad_left + 30, _y + 55, _song_name);
+	
+	draw_set_font(global.Fonts.f1O)
+    draw_text(_x + _pad_left + 20, _y + 45, _song_name);
+	draw_set_font(global.Fonts.f1Om)
+	draw_text(_x + _pad_left + 20, _y + 78, _autor);
+	draw_set_font(global.Fonts.f1O)
 
     var _icon_x = _x + _target_width + _icon_margin;
     draw_sprite(_ICONOS, 0, _icon_x + 50, _y + 55); 

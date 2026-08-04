@@ -161,6 +161,8 @@ if (is_playing) {
     }
 }
 
+if !is_playing {exit}
+
 cam_x = lerp(cam_x, cam_target_x, cam_lerp_speed);
 cam_y = lerp(cam_y, cam_target_y, cam_lerp_speed);
 cam_zoom = lerp(cam_zoom, cam_target_zoom, cam_zoom_speed);
@@ -175,7 +177,7 @@ var _view_h = 648 * cam_zoom;
 camera_set_view_size(view_camera[0], _view_w, _view_h);
 camera_set_view_pos(view_camera[0], (cam_x - _view_w/2) + _sx, (cam_y - _view_h/2) + _sy);
 
-if !is_playing {exit}
+
 
 // 2. ACTUALIZAR TIEMPO
 if (precision_alpha > 0) precision_alpha -= 0.05; // Desvanecer texto de precisión

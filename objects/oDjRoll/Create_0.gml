@@ -2,9 +2,9 @@ angle = 0
 if room != rmFreeplay {exit}
 
 songs = [
-	["Chicha Mania", sChicheroIcon, sChicheroArt],
-    ["Carcel Infierno", sChicheroIcon, sChicheroArt],
-    ["Test", sChicheroIcon, sChicheroArt],
+	["Chicha Mania", sChicheroIcon, sChicheroArt, "Kimihito"],
+    ["Carcel Infierno", sChicheroIcon, sChicheroArt, "Kimihito"],
+    ["Test", sChicheroIcon, sChicheroArt, "Kimihito"],
 ]
 
 // --- NUEVAS VARIABLES PARA EL ARTE ---

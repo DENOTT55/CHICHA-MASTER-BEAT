@@ -85,7 +85,7 @@ else if (menu_state == 1) {
     var _current_cat = options_list[sel_cat]; //
     var _item = _current_cat.items[sel_opt]; //
     
-    if (_left && !_enter && _item.type != "list") { //
+    if (_left && !_enter) { //
         menu_state = 0; //
     }
     
@@ -101,6 +101,10 @@ else if (menu_state == 1) {
             // NUEVO: Ejecución Instantánea de Antialiasing
             if (_item.key == "disable_aa") {
                 scr_apply_aa(_item.val);
+            }
+			
+			if (_item.key == "splitScreen") {
+                global.SHOWSPLIT = _item.val
             }
         } 
         else if (_item.type == "list") { //

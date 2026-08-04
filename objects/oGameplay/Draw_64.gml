@@ -12,37 +12,44 @@ if (global.alerta_cambio_input) {
     //draw_text(_W/2, 50, "CAMBIO APROXIMANDOSE!");
 }
 
-// Convertimos el Alpha en una variable de la instancia para que el Lerp funcione
-if (!variable_instance_exists(id, "alpha_split")) alpha_split = 0;
+if global.SHOWSPLIT == true
+{
+	// Convertimos el Alpha en una variable de la instancia para que el Lerp funcione
+	if (!variable_instance_exists(id, "alpha_split")) alpha_split = 0;
 
-var _ALPto = (global.modo_input == "SPLIT") ? 0.1 : 0;
-alpha_split = lerp(alpha_split, _ALPto, 0.1);
+	var _ALPto = (global.modo_input == "SPLIT") ? 0.1 : 0;
+	alpha_split = lerp(alpha_split, _ALPto, 0.1);
 
-if (alpha_split > 0.01) {
-    draw_set_alpha(alpha_split);
+	if (alpha_split > 0.01) {
+	    draw_set_alpha(alpha_split);
 
-    draw_set_color(c_green);
-    draw_rectangle(0, 0, _W/2, _H, false); // Mitad Izquierda
+	    draw_set_color(c_green);
+	    draw_rectangle(0, 0, _W/2, _H, false); // Mitad Izquierda
 
-    draw_set_color(c_aqua);
-    draw_rectangle(_W/2, 0, _W, _H, false); // Mitad Derecha
+	    draw_set_color(c_aqua);
+	    draw_rectangle(_W/2, 0, _W, _H, false); // Mitad Derecha
     
-    draw_set_alpha(1); // RESTAURAR ALPHA: Vital para que el resto de textos no se vuelvan transparentes
+	    draw_set_alpha(1); // RESTAURAR ALPHA: Vital para que el resto de textos no se vuelvan transparentes
+	}
 }
 
 // ==========================================================
-// 2. BARRA DE PROGRESO Y FIN DE CANCIÓN
+// 2. BARRA DE PROGRESO, TIMER Y FIN DE CANCIÓN
 // ==========================================================
-// IMPORTANTE: Sustituye '120' por la duración real de tu canción en segundos.
-// (O usa audio_sound_length(tu_audio) en tu Create Event)
 if (!variable_instance_exists(id, "total_song_time")) total_song_time = audio_sound_length(audio_instance); 
 if (!variable_instance_exists(id, "cancion_terminada")) cancion_terminada = false;
 
 var _progreso = clamp(current_time_sec / total_song_time, 0, 1);
-var _ancho_barra = _W * 0.3; // Ocupa el 60% de la pantalla
+var _ancho_barra = _W * 0.3; // Ocupa el 60% de la pantalla (o 30% dependiendo de tu base)
 var _x_barra = (_W - _ancho_barra) / 2;
 var _y_barra = 40; // Pegado arriba
 var _alto_barra = 20;
+
+// --- DIBUJO DE LA BARRA DE PROGRESO ---
+
+// Dibujar borde de la barra (Negro)
+draw_set_color(c_black);
+draw_rectangle(_x_barra-5, _y_barra-5, _x_barra + _ancho_barra+5, _y_barra + _alto_barra+5, false);
 
 // Dibujar Fondo de la barra (Gris)
 draw_set_color(c_dkgray);
@@ -52,6 +59,28 @@ draw_rectangle(_x_barra, _y_barra, _x_barra + _ancho_barra, _y_barra + _alto_bar
 draw_set_color(c_lime);
 draw_rectangle(_x_barra, _y_barra, _x_barra + (_ancho_barra * _progreso), _y_barra + _alto_barra, false);
 draw_set_color(c_white);
+
+// --- NUEVO: CÁLCULO Y DIBUJO DEL TIMER ---
+// Aseguramos que el tiempo no baje de 0
+var _tiempo_restante = max(0, total_song_time - current_time_sec); 
+
+var _minutos = floor(_tiempo_restante / 60);
+var _segundos = floor(_tiempo_restante mod 60);
+
+// Añadir un cero a la izquierda si los segundos son de un solo dígito
+var _texto_segundos = (_segundos < 10) ? "0" + string(_segundos) : string(_segundos);
+var _texto_timer = string(_minutos) + ":" + _texto_segundos;
+
+// Dibujar el Timer justo encima de la barra
+draw_set_halign(fa_center);
+draw_set_valign(fa_bottom);
+draw_set_color(c_black);
+draw_text((_W / 2)+3, _y_barra + 20+3, _texto_timer);
+draw_set_color(c_white);
+draw_text(_W / 2, _y_barra + 20, _texto_timer);
+// Restaurar alineación vertical
+draw_set_valign(fa_top); 
+draw_set_halign(fa_left);
 
 // Disparador de Fin de Canción
 if (_progreso >= 1 && !cancion_terminada) {
